@@ -6,9 +6,10 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>XeetFlow - Crypto Twitter Analytics Platform v3.0</title>
+         <title>XeetFlow - Crypto Twitter Analytics Platform v4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="gist-api.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -87,15 +88,23 @@
                     <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
                         <h2 class="text-xl font-semibold mb-6" id="filters-title">Filters (0)</h2>
                         
-                        <!-- Update Data Button -->
-                        <div class="mb-6">
-                            <button id="update-data-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded font-medium transition-colors">
-                                🔄 Update Data from Xeet.ai
-                            </button>
-                            <p class="text-xs text-gray-400 mt-2 text-center">
-                                Loads fresh data from the API
-                            </p>
-                        </div>
+                                                 <!-- Update Data Button -->
+                         <div class="mb-6">
+                             <button id="update-data-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded font-medium transition-colors">
+                                 🔄 Update Data from Xeet.ai
+                             </button>
+                             <p class="text-xs text-gray-400 mt-2 text-center">
+                                 Loads fresh data from the API
+                             </p>
+                             
+                             <!-- GitHub Connection Test -->
+                             <button id="test-github-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded font-medium transition-colors mt-2">
+                                 🔗 Test GitHub Connection
+                             </button>
+                             <p class="text-xs text-gray-400 mt-2 text-center">
+                                 Check if GitHub Gist is configured
+                             </p>
+                         </div>
                         
                         <!-- Data Info -->
                         <div id="data-info" class="mb-6 hidden">
@@ -215,7 +224,7 @@
     </footer>
 
     <script>
-        // XeetFlow v3.0 - Main application with API parsing
+                 // XeetFlow v4.0 - Main application with GitHub Gist integration
         // Global variables
         let allHeroes = [];
         let displayedHeroes = [];
@@ -228,6 +237,9 @@
         let currentPage = 1;
         let heroesPerPage = 20;
         let totalPages = 1;
+        
+                 // Global API instance (using GitHub Gist)
+         const globalAPI = new GistAPI();
 
         // API configuration for both tournaments
         const API_CONFIGS = {
@@ -468,62 +480,109 @@
              }
          }
          
-         // Function to save data to server (simulated with localStorage for now)
-         function saveDataToServer() {
-             try {
-                 // Save to a shared storage key that all users can access
-                 localStorage.setItem(`xeet_shared_data_${currentTournament}`, JSON.stringify({
-                     heroes: allHeroes,
-                     avatars: avatarsData,
-                     timestamp: Date.now(),
-                     tournament: currentTournament,
-                     isShared: true
-                 }));
-             } catch (error) {
-                 console.error('Error saving to server:', error);
-             }
-         }
+                   // Function to save data to GitHub Gist
+          async function saveDataToServer() {
+              try {
+                  const success = await globalAPI.saveData(currentTournament, {
+                      heroes: allHeroes,
+                      avatars: avatarsData,
+                      timestamp: Date.now()
+                  });
+                  
+                  if (success) {
+                      console.log('✅ Data saved to GitHub Gist');
+                      // Show success message
+                      showNotification('Data saved to GitHub Gist successfully!', 'success');
+                  } else {
+                      console.log('⚠️ Failed to save to Gist, using localStorage fallback');
+                      // Fallback to localStorage
+                      localStorage.setItem(`xeet_shared_data_${currentTournament}`, JSON.stringify({
+                          heroes: allHeroes,
+                          avatars: avatarsData,
+                          timestamp: Date.now(),
+                          tournament: currentTournament,
+                          isShared: true
+                      }));
+                      showNotification('Saved to local storage (Gist unavailable)', 'warning');
+                  }
+              } catch (error) {
+                  console.error('Error saving to Gist:', error);
+                  // Fallback to localStorage
+                  localStorage.setItem(`xeet_shared_data_${currentTournament}`, JSON.stringify({
+                      heroes: allHeroes,
+                      avatars: avatarsData,
+                      timestamp: Date.now(),
+                      tournament: currentTournament,
+                      isShared: true
+                  }));
+                  showNotification('Saved to local storage (Gist error)', 'error');
+              }
+          }
 
-                 // Function to load data from localStorage
-         function loadDataFromStorage() {
-             try {
-                 // First try to load shared data (from other users)
-                 const sharedData = localStorage.getItem(`xeet_shared_data_${currentTournament}`);
-                 if (sharedData) {
-                     const data = JSON.parse(sharedData);
-                     allHeroes = data.heroes || [];
-                     avatarsData = data.avatars || {};
-                     
-                     if (allHeroes.length > 0) {
-                         totalRecords.textContent = allHeroes.length.toLocaleString();
-                         lastUpdated.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString('en-US') : 'Unknown';
-                         dataInfo.classList.remove('hidden');
-                         applyFiltersAndSort();
-                         return;
-                     }
-                 }
-                 
-                 // Fallback to personal data
-                 const saved = localStorage.getItem(`xeet_heroes_data_${currentTournament}`);
-                 if (saved) {
-                     const data = JSON.parse(saved);
-                     allHeroes = data.heroes || [];
-                     avatarsData = data.avatars || {};
-                     
-                     if (allHeroes.length > 0) {
-                         totalRecords.textContent = allHeroes.length.toLocaleString();
-                         lastUpdated.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString('en-US') : 'Unknown';
-                         dataInfo.classList.remove('hidden');
-                         applyFiltersAndSort();
-                     }
-                 }
-             } catch (error) {
-                 console.error('Error loading from localStorage:', error);
-             }
-         }
+                           // Function to load data from GitHub Gist or localStorage
+          async function loadDataFromStorage() {
+              try {
+                  // First try to load from GitHub Gist
+                  const globalData = await globalAPI.loadData(currentTournament);
+                  if (globalData && globalData.heroes.length > 0) {
+                      allHeroes = globalData.heroes;
+                      avatarsData = globalData.avatars;
+                      
+                      totalRecords.textContent = allHeroes.length.toLocaleString();
+                      lastUpdated.textContent = globalData.lastUpdated ? new Date(globalData.lastUpdated).toLocaleString('en-US') : 'Unknown';
+                      dataInfo.classList.remove('hidden');
+                      applyFiltersAndSort();
+                      console.log('✅ Loaded data from GitHub Gist');
+                      showNotification('Data loaded from GitHub Gist', 'success');
+                      return;
+                  }
+                  
+                  // Fallback to localStorage shared data
+                  const sharedData = localStorage.getItem(`xeet_shared_data_${currentTournament}`);
+                  if (sharedData) {
+                      const data = JSON.parse(sharedData);
+                      allHeroes = data.heroes || [];
+                      avatarsData = data.avatars || {};
+                      
+                      if (allHeroes.length > 0) {
+                          totalRecords.textContent = allHeroes.length.toLocaleString();
+                          lastUpdated.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString('en-US') : 'Unknown';
+                          dataInfo.classList.remove('hidden');
+                          applyFiltersAndSort();
+                          console.log('✅ Loaded data from localStorage');
+                          showNotification('Data loaded from local storage', 'info');
+                          return;
+                      }
+                  }
+                  
+                  // Final fallback to personal data
+                  const saved = localStorage.getItem(`xeet_heroes_data_${currentTournament}`);
+                  if (saved) {
+                      const data = JSON.parse(saved);
+                      allHeroes = data.heroes || [];
+                      avatarsData = data.avatars || {};
+                      
+                      if (allHeroes.length > 0) {
+                          totalRecords.textContent = allHeroes.length.toLocaleString();
+                          lastUpdated.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString('en-US') : 'Unknown';
+                          dataInfo.classList.remove('hidden');
+                          applyFiltersAndSort();
+                          console.log('✅ Loaded personal data');
+                          showNotification('Data loaded from personal storage', 'info');
+                      }
+                  }
+              } catch (error) {
+                  console.error('Error loading data:', error);
+                  showNotification('Error loading data from Gist', 'error');
+              }
+          }
 
-        // Update data button handler
-        updateDataBtn.addEventListener('click', parseAllPages);
+                 // Update data button handler
+         updateDataBtn.addEventListener('click', parseAllPages);
+         
+         // GitHub connection test button handler
+         const testGithubBtn = document.getElementById('test-github-btn');
+         testGithubBtn.addEventListener('click', testGitHubConnection);
 
         // Filter event handlers
         searchInput.addEventListener('input', applyFiltersAndSort);
@@ -759,10 +818,72 @@
              }
          });
          
-         // Initialization
-         updateTournamentUI();
-         updateSortButtons();
-         loadDataFromStorage();
+                   // Function to show notifications
+          function showNotification(message, type = 'info') {
+              // Create notification element
+              const notification = document.createElement('div');
+              notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm transition-all duration-300 transform translate-x-full`;
+              
+              // Set colors based on type
+              const colors = {
+                  success: 'bg-green-600 text-white',
+                  error: 'bg-red-600 text-white',
+                  warning: 'bg-yellow-600 text-white',
+                  info: 'bg-blue-600 text-white'
+              };
+              
+              notification.className += ` ${colors[type] || colors.info}`;
+              notification.innerHTML = `
+                  <div class="flex items-center">
+                      <span class="mr-2">${type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                      <span>${message}</span>
+                  </div>
+              `;
+              
+              // Add to page
+              document.body.appendChild(notification);
+              
+              // Animate in
+              setTimeout(() => {
+                  notification.classList.remove('translate-x-full');
+              }, 100);
+              
+              // Remove after 5 seconds
+              setTimeout(() => {
+                  notification.classList.add('translate-x-full');
+                  setTimeout(() => {
+                      document.body.removeChild(notification);
+                  }, 300);
+              }, 5000);
+          }
+          
+          // Function to test GitHub connection
+          async function testGitHubConnection() {
+              try {
+                  testGithubBtn.disabled = true;
+                  testGithubBtn.textContent = 'Testing...';
+                  
+                  const result = await globalAPI.testConnection();
+                  
+                  if (result.success) {
+                      showNotification(`GitHub connected successfully! User: ${result.user}`, 'success');
+                  } else {
+                      showNotification(`GitHub connection failed: ${result.error}`, 'error');
+                  }
+              } catch (error) {
+                  showNotification(`GitHub test error: ${error.message}`, 'error');
+              } finally {
+                  testGithubBtn.disabled = false;
+                  testGithubBtn.textContent = '🔗 Test GitHub Connection';
+              }
+          }
+          
+          // Initialization
+          updateTournamentUI();
+          updateSortButtons();
+          loadDataFromStorage().then(() => {
+              console.log('✅ Initialization complete');
+          });
     </script>
 </body>
 </html>
