@@ -85,34 +85,27 @@ The analysis script will create:
 For interactive data viewing and filtering, open the web application:
 
 ```bash
-# Basic version (CSV file upload)
-start index.html
-
-# Version with avatar support (CSV file upload)
-start index_with_avatars.html
-
-# 🚀 STANDALONE version (built-in API parsing)
+# 🚀 MAIN APPLICATION (built-in API parsing)
 start index_standalone.html
 ```
 
-**Web Interface Features:**
-- 📊 CSV file upload through browser
-- 🔍 Search by username
-- 📈 Sorting by score, followers, signal, noise
-- 🎯 Filtering by score and noise points ranges
-- 🎨 Dark theme with modern design
-- 📱 Responsive design for all devices
-- 👤 Avatar display (in enhanced version)
-
-**🚀 Standalone Application (index_standalone.html):**
+**🚀 Main Application Features:**
 - ⚡ Built-in API parsing directly in browser
 - 🏆 Support for both Leagues and Signals tournaments
 - 🔄 "Update Data" button for loading fresh statistics
 - 📊 Progress bar and real-time loading status
 - 💾 Automatic data saving in localStorage (separate for each tournament)
-- 🎯 All filtering and sorting functions
+- 🔍 Search by username
+- 📈 Sorting by score, followers, signal, noise
+- 🎯 Filtering by score and noise points ranges
+- 🎨 Dark theme with modern design
+- 📱 Responsive design for all devices
 - 👤 Automatic avatar display
 - ⏱️ Request delays to reduce server load
+
+**Legacy Versions (for reference only):**
+- `index.html` - Basic version with CSV file upload
+- `index_with_avatars.html` - Enhanced version with avatar support and CSV upload
 
 ## Output Files
 
@@ -183,9 +176,9 @@ The script includes:
 ├── analyze_data.py             # Data analysis script
 ├── requirements.txt            # Python dependencies
 ├── README.md                  # Documentation
-├── index.html                 # Web application for data viewing
-├── index_with_avatars.html    # Enhanced version with avatar support
-├── index_standalone.html      # 🚀 STANDALONE application with built-in parsing
+├── index_standalone.html      # 🚀 MAIN web application with built-in API parsing
+├── index.html                 # Legacy version (CSV upload)
+├── index_with_avatars.html    # Legacy version (CSV upload + avatars)
 ├── xeet_leagues_stats.csv     # Leagues tournament data
 ├── xeet_leagues_avatars.csv   # Leagues tournament avatars
 ├── xeet_leagues_metadata.json # Leagues tournament metadata
