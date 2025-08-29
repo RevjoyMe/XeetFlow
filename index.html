@@ -97,13 +97,13 @@
                                  Loads fresh data from the API
                              </p>
                              
-                             <!-- GitHub Connection Test -->
-                             <button id="test-github-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded font-medium transition-colors mt-2">
-                                 🔗 Test GitHub Connection
-                             </button>
-                             <p class="text-xs text-gray-400 mt-2 text-center">
-                                 Check if GitHub Gist is configured
-                             </p>
+                                                           <!-- GitHub Connection Test -->
+                              <button id="test-github-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded font-medium transition-colors mt-2">
+                                  🔗 Setup GitHub Gist
+                              </button>
+                              <p class="text-xs text-gray-400 mt-2 text-center">
+                                  Configure global data sharing
+                              </p>
                          </div>
                         
                         <!-- Data Info -->
@@ -580,9 +580,9 @@
                  // Update data button handler
          updateDataBtn.addEventListener('click', parseAllPages);
          
-         // GitHub connection test button handler
+         // GitHub setup button handler
          const testGithubBtn = document.getElementById('test-github-btn');
-         testGithubBtn.addEventListener('click', testGitHubConnection);
+         testGithubBtn.addEventListener('click', setupGitHub);
 
         // Filter event handlers
         searchInput.addEventListener('input', applyFiltersAndSort);
@@ -857,26 +857,29 @@
               }, 5000);
           }
           
-          // Function to test GitHub connection
-          async function testGitHubConnection() {
-              try {
-                  testGithubBtn.disabled = true;
-                  testGithubBtn.textContent = 'Testing...';
-                  
-                  const result = await globalAPI.testConnection();
-                  
-                  if (result.success) {
-                      showNotification(`GitHub connected successfully! User: ${result.user}`, 'success');
-                  } else {
-                      showNotification(`GitHub connection failed: ${result.error}`, 'error');
-                  }
-              } catch (error) {
-                  showNotification(`GitHub test error: ${error.message}`, 'error');
-              } finally {
-                  testGithubBtn.disabled = false;
-                  testGithubBtn.textContent = '🔗 Test GitHub Connection';
-              }
-          }
+                     // Function to setup GitHub
+           async function setupGitHub() {
+               try {
+                   testGithubBtn.disabled = true;
+                   testGithubBtn.textContent = 'Setting up...';
+                   
+                   const success = await globalAPI.initialize();
+                   
+                   if (success) {
+                       showNotification('GitHub Gist configured successfully!', 'success');
+                       testGithubBtn.textContent = '✅ GitHub Ready';
+                       testGithubBtn.className = 'w-full bg-green-600 text-white py-2 px-4 rounded font-medium mt-2';
+                   } else {
+                       showNotification('GitHub setup skipped', 'info');
+                       testGithubBtn.textContent = '🔗 Setup GitHub Gist';
+                   }
+               } catch (error) {
+                   showNotification(`GitHub setup error: ${error.message}`, 'error');
+                   testGithubBtn.textContent = '🔗 Setup GitHub Gist';
+               } finally {
+                   testGithubBtn.disabled = false;
+               }
+           }
           
           // Initialization
           updateTournamentUI();
