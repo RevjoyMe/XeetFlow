@@ -7,9 +7,14 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
          <title>XeetFlow - Crypto Twitter Analytics Platform v4.0</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="gist-api.js"></script>
+         <script src="https://cdn.tailwindcss.com"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+     <!-- Firebase SDK -->
+     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+     <!-- Firebase Config -->
+     <script src="firebase-config.js"></script>
+     <script src="firebase-api.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -97,12 +102,12 @@
                                  Loads fresh data from the API
                              </p>
                              
-                                                           <!-- GitHub Connection Test -->
-                              <button id="test-github-btn" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded font-medium transition-colors mt-2">
-                                  🔗 Setup GitHub Gist
-                              </button>
+                                                           <!-- Firebase Status -->
+                              <div id="firebase-status" class="w-full bg-blue-600 text-white py-2 px-4 rounded font-medium text-center">
+                                  🔥 Firebase Connected
+                              </div>
                               <p class="text-xs text-gray-400 mt-2 text-center">
-                                  Configure global data sharing
+                                  Real-time global data sharing
                               </p>
                          </div>
                         
@@ -238,8 +243,8 @@
         let heroesPerPage = 20;
         let totalPages = 1;
         
-                 // Global API instance (using GitHub Gist)
-         const globalAPI = new GistAPI();
+                 // Global API instance (using Firebase)
+         const globalAPI = new FirebaseAPI();
 
         // API configuration for both tournaments
         const API_CONFIGS = {
@@ -580,9 +585,8 @@
                  // Update data button handler
          updateDataBtn.addEventListener('click', parseAllPages);
          
-         // GitHub setup button handler
-         const testGithubBtn = document.getElementById('test-github-btn');
-         testGithubBtn.addEventListener('click', setupGitHub);
+         // Firebase status element
+         const firebaseStatus = document.getElementById('firebase-status');
 
         // Filter event handlers
         searchInput.addEventListener('input', applyFiltersAndSort);
@@ -857,36 +861,59 @@
               }, 5000);
           }
           
-                     // Function to setup GitHub
-           async function setupGitHub() {
+                     // Function to setup Firebase real-time listeners
+           async function setupFirebaseListeners() {
                try {
-                   testGithubBtn.disabled = true;
-                   testGithubBtn.textContent = 'Setting up...';
-                   
-                   const success = await globalAPI.initialize();
-                   
-                   if (success) {
-                       showNotification('GitHub Gist configured successfully!', 'success');
-                       testGithubBtn.textContent = '✅ GitHub Ready';
-                       testGithubBtn.className = 'w-full bg-green-600 text-white py-2 px-4 rounded font-medium mt-2';
-                   } else {
-                       showNotification('GitHub setup skipped', 'info');
-                       testGithubBtn.textContent = '🔗 Setup GitHub Gist';
-                   }
+                   // Подписываемся на изменения данных для обоих турниров
+                   globalAPI.subscribeToData('leagues', (data) => {
+                       if (data && data.heroes.length > 0) {
+                           console.log('🔄 Получены обновленные данные Leagues из Firebase');
+                           showNotification('Leagues data updated from another user!', 'info');
+                           
+                           // Обновляем данные только если мы не в процессе парсинга
+                           if (!isParsing && currentTournament === 'leagues') {
+                               allHeroes = data.heroes;
+                               avatarsData = data.avatars;
+                               applyFiltersAndSort();
+                           }
+                       }
+                   });
+
+                   globalAPI.subscribeToData('signals', (data) => {
+                       if (data && data.heroes.length > 0) {
+                           console.log('🔄 Получены обновленные данные Signals из Firebase');
+                           showNotification('Signals data updated from another user!', 'info');
+                           
+                           // Обновляем данные только если мы не в процессе парсинга
+                           if (!isParsing && currentTournament === 'signals') {
+                               allHeroes = data.heroes;
+                               avatarsData = data.avatars;
+                               applyFiltersAndSort();
+                           }
+                       }
+                   });
+
+                   console.log('✅ Firebase listeners настроены');
                } catch (error) {
-                   showNotification(`GitHub setup error: ${error.message}`, 'error');
-                   testGithubBtn.textContent = '🔗 Setup GitHub Gist';
-               } finally {
-                   testGithubBtn.disabled = false;
+                   console.error('❌ Ошибка настройки Firebase listeners:', error);
                }
            }
           
-          // Initialization
-          updateTournamentUI();
-          updateSortButtons();
-          loadDataFromStorage().then(() => {
-              console.log('✅ Initialization complete');
-          });
+                     // Initialization
+           updateTournamentUI();
+           updateSortButtons();
+           
+           // Initialize Firebase and setup listeners
+           globalAPI.initialize().then(() => {
+               setupFirebaseListeners();
+               loadDataFromStorage().then(() => {
+                   console.log('✅ Initialization complete');
+               });
+           }).catch(error => {
+               console.error('❌ Firebase initialization failed:', error);
+               firebaseStatus.textContent = '❌ Firebase Error';
+               firebaseStatus.className = 'w-full bg-red-600 text-white py-2 px-4 rounded font-medium text-center';
+           });
     </script>
 </body>
 </html>

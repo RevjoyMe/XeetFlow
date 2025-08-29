@@ -1,208 +1,174 @@
 # XeetFlow - Crypto Twitter Analytics Platform
 
-A comprehensive platform for parsing and analyzing crypto influencers data from Xeet.ai tournament leaderboard.
+A modern web application for analyzing crypto influencers from Xeet.ai leaderboards with real-time data parsing, filtering, and automatic global synchronization powered by Firebase.
 
-## Description
+## 🚀 Features
 
-The platform automatically collects data from all tournament participants by processing multiple API pages with pagination. The platform supports two different tournaments:
+- **🏆 Dual Tournament Support**: Both "Leagues" and "Signals" tournaments
+- **⚡ Real-time Data Parsing**: Direct API integration with Xeet.ai
+- **🔍 Advanced Filtering**: Search by username, filter by score and noise points
+- **📊 Interactive Sorting**: Sort by score, followers, signal score, or noise points
+- **🎨 Modern Design**: Dark theme with Tailwind CSS
+- **📄 Smart Pagination**: Handle large datasets efficiently
+- **🔥 Real-time Global Sync**: Firebase Realtime Database for instant data sharing
+- **🔄 Automatic Updates**: Data updates automatically for all users worldwide
+- **📱 Responsive**: Works perfectly on all devices
 
-- **🏆 Leagues Tournament**: 1797 pages, ~35,940 records
-- **📊 Signals Tournament**: 431 pages, ~8,620 records
+## 🎯 How It Works
 
-Each tournament has its own leaderboard with different statistics and participants. Extracted information is saved to separate CSV files for each tournament.
+1. **User A** clicks "Update Data" and parses fresh statistics from Xeet.ai
+2. **Data is automatically saved** to Firebase Realtime Database
+3. **All other users worldwide** instantly receive the updated data
+4. **Notifications appear** showing "Data updated from another user!"
+5. **No manual refresh needed** - everything updates automatically
 
-## Features
+## 🚀 Quick Start
 
-- ✅ Paginated API processing (431 pages)
-- ✅ Extraction of all required data fields
-- ✅ Error handling and retry mechanisms
-- ✅ Request delays to reduce server load
-- ✅ UTF-8 CSV file saving
-- ✅ Detailed progress logging
+### Option 1: Use the Live Demo
+Simply visit the deployed application - no setup required!
 
-## Extracted Data
+### Option 2: Local Development
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/RevjoyMe/XeetFlow.git
+   cd XeetFlow
+   ```
+
+2. **Set up Firebase** (see [FIREBASE_SETUP.md](FIREBASE_SETUP.md))
+
+3. **Open `index.html`** in your browser
+
+4. **Select a tournament** (Leagues or Signals)
+
+5. **Click "Update Data"** to load fresh statistics
+
+## 🔥 Real-time Global Synchronization
+
+This application uses **Firebase Realtime Database** for automatic data synchronization:
+
+- ✅ **No user setup required** - works out of the box
+- ✅ **Real-time updates** - data syncs instantly across all users
+- ✅ **Automatic notifications** - users know when data is updated
+- ✅ **Free tier** - up to 1GB data and 10GB traffic per month
+- ✅ **Secure** - built-in authentication and security rules
+
+### Setup Instructions
+
+See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for detailed Firebase setup instructions.
+
+## 📊 API Configuration
+
+### Leagues Tournament
+- **URL**: `https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard`
+- **Pages**: 1797 (~35,940 records)
+- **Description**: Main tournament with comprehensive statistics
+
+### Signals Tournament
+- **URL**: `https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard`
+- **Pages**: 431 (~8,620 records)
+- **Description**: Signals-focused tournament
+
+## 📈 Extracted Data
 
 For each crypto influencer, the following data is collected:
 
 - `rank` - ranking position
 - `username` - username
 - `followerCount` - number of followers
-- `score` - overall score
-- `signalScore` - signal score
-- `noisePoints` - noise points
+- `score` - overall score (rounded to 2 decimal places)
+- `signalScore` - signal score (rounded to 2 decimal places)
+- `noisePoints` - noise points (rounded to 2 decimal places)
 - `totalEngagement` - total engagement
 - `engagementRate` - engagement rate
 - `averageEngagementPerPost` - average engagement per post
-
-## Installation
-
-1. Make sure you have Python 3.7+ installed
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-### Data Parsing
-
-Run the parser script for specific tournaments:
-
-```bash
-# Parse Leagues Tournament (default)
-python xeet_leaderboard_parser.py leagues
-
-# Parse Signals Tournament
-python xeet_leaderboard_parser.py signals
-
-# Or just run without arguments (defaults to leagues)
-python xeet_leaderboard_parser.py
-```
-
-The script will automatically:
-1. Start processing all pages for the selected tournament
-2. Display progress in the console
-3. Save the result to tournament-specific CSV files
-
-### Data Analysis
-
-After obtaining data, run the analysis script:
-
-```bash
-python analyze_data.py
-```
-
-The analysis script will create:
-- Detailed statistics for all metrics
-- Correlation analysis between indicators
-- Data distribution visualizations
-- Top performers analysis
-- PNG format graphs
-
-### Web Interface
-
-For interactive data viewing and filtering, open the web application:
-
-```bash
-# 🚀 MAIN APPLICATION (built-in API parsing)
-start index_standalone.html
-```
-
-**🚀 Main Application Features:**
-- ⚡ Built-in API parsing directly in browser
-- 🏆 Support for both Leagues and Signals tournaments
-- 🔄 "Update Data" button for loading fresh statistics
-- 📊 Progress bar and real-time loading status
-- 💾 Automatic data saving in localStorage (separate for each tournament)
-- 🔍 Search by username
-- 📈 Sorting by score, followers, signal, noise
-- 🎯 Filtering by score and noise points ranges
-- 🎨 Dark theme with modern design
-- 📱 Responsive design for all devices
-- 👤 Automatic avatar display
-- ⏱️ Request delays to reduce server load
-
-**Legacy Versions (for reference only):**
-- `index.html` - Basic version with CSV file upload
-- `index_with_avatars.html` - Enhanced version with avatar support and CSV upload
-
-## Output Files
-
-### Leagues Tournament Files
-- `xeet_leagues_stats.csv` - Main statistics data
-- `xeet_leagues_avatars.csv` - Avatar data
-- `xeet_leagues_metadata.json` - Parsing metadata
-
-### Signals Tournament Files
-- `xeet_signals_stats.csv` - Main statistics data
-- `xeet_signals_avatars.csv` - Avatar data
-- `xeet_signals_metadata.json` - Parsing metadata
-
-### Data Structure
-Main statistics CSV files contain the following headers:
-
-```csv
-rank,username,followerCount,score,signalScore,noisePoints,totalEngagement,engagementRate,averageEngagementPerPost
-```
-
-Avatar CSV files contain:
-
-```csv
-username,avatar,name
-```
-
-Where:
-- `username` - username
-- `avatar` - avatar link
+- `avatar` - profile picture URL
 - `name` - display name
 
-## API Endpoints
+## 🛠️ Technologies Used
 
-The script uses different API endpoints for each tournament:
+- **HTML5** - Structure
+- **Tailwind CSS** - Modern styling
+- **Vanilla JavaScript** - Functionality
+- **Firebase Realtime Database** - Global data synchronization
+- **Firebase SDK** - Real-time data management
+- **PapaParse** - CSV parsing (legacy support)
 
-### Leagues Tournament
+## 📁 Project Structure
+
 ```
-https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard
+├── index.html                 # 🚀 MAIN web application
+├── firebase-config.js         # Firebase configuration
+├── firebase-api.js           # Firebase API wrapper
+├── FIREBASE_SETUP.md         # Firebase setup instructions
+├── GITHUB_SETUP.md           # Legacy GitHub Gist setup (deprecated)
+├── xeet_leaderboard_parser.py # Python parser (standalone)
+├── README.md                 # This documentation
+└── legacy/                   # Legacy files (if any)
 ```
-- `page` - page number (1-1797)
-- `limit` - records per page (20)
 
-### Signals Tournament
-```
-https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard
-```
-- `page` - page number (1-431)
-- `limit` - records per page (20)
+## 🔧 Development
 
-## Error Handling
+### Local Development
+1. Set up Firebase project
+2. Update `firebase-config.js` with your Firebase credentials
+3. Open `index.html` in browser
+4. Start developing!
 
-The script includes:
-- Network error handling
+### Deployment
+The application can be deployed to any static hosting service:
+- **Vercel** (recommended)
+- **Netlify**
+- **GitHub Pages**
+- **Firebase Hosting**
+
+## 📊 Performance
+
+- **Parsing Speed**: ~15 minutes (Leagues), ~4 minutes (Signals)
+- **Real-time Sync**: Instant updates across all users
+- **Data Size**: ~35,940 records (Leagues), ~8,620 records (Signals)
+- **Request Delay**: 0.5 seconds between API calls
+
+## 🛡️ Security
+
+- **Firebase Security Rules** - configurable access control
+- **Test Mode** - simple setup for development
+- **Production Ready** - can be secured for production use
+
+## 🚨 Error Handling
+
+The application includes comprehensive error handling:
+- Network error recovery
 - JSON parsing error handling
 - Request timeouts (30 seconds)
-- Skipping problematic pages with continued operation
+- Graceful fallbacks to localStorage
+- User-friendly error messages
 
-## Performance
+## 📈 Analytics & Monitoring
 
-- Delay between requests: 0.5 seconds
-- Expected execution time: ~15 minutes (Leagues), ~4 minutes (Signals)
-- Expected number of records: ~35,940 (Leagues: 1797 pages × 20 records), ~8,620 (Signals: 431 pages × 20 records)
+Firebase provides built-in analytics:
+- **Usage Statistics** - data transfer and storage
+- **User Activity** - real-time user count
+- **Performance Monitoring** - response times and errors
 
-## Project Structure
+## 🤝 Contributing
 
-```
-├── xeet_leaderboard_parser.py  # Main parser script
-├── analyze_data.py             # Data analysis script
-├── requirements.txt            # Python dependencies
-├── README.md                  # Documentation
-├── index_standalone.html      # 🚀 MAIN web application with built-in API parsing
-├── index.html                 # Legacy version (CSV upload)
-├── index_with_avatars.html    # Legacy version (CSV upload + avatars)
-├── xeet_leagues_stats.csv     # Leagues tournament data
-├── xeet_leagues_avatars.csv   # Leagues tournament avatars
-├── xeet_leagues_metadata.json # Leagues tournament metadata
-├── xeet_signals_stats.csv     # Signals tournament data
-├── xeet_signals_avatars.csv   # Signals tournament avatars
-└── xeet_signals_metadata.json # Signals tournament metadata
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## Usage Example
+## 📄 License
 
-```python
-from xeet_leaderboard_parser import XeetLeaderboardParser
+MIT License - feel free to use and modify as needed.
 
-# Create parser instance for Leagues tournament
-parser_leagues = XeetLeaderboardParser("leagues")
-parser_leagues.run()
+## 🆘 Support
 
-# Create parser instance for Signals tournament
-parser_signals = XeetLeaderboardParser("signals")
-parser_signals.run()
-```
+- **Issues**: Create an issue on GitHub
+- **Documentation**: Check [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
+- **Questions**: Open a discussion on GitHub
 
-## Notes
+---
 
-- The script uses User-Agent headers to mimic browser requests
-- All data is saved in UTF-8 encoding for proper character display
-- If errors occur on individual pages, the script continues with the remaining pages
+**🔥 XeetFlow - Where Crypto Analytics Meets Real-time Collaboration! 🌍**
