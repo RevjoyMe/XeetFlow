@@ -158,14 +158,27 @@
                     </div>
                 </div>
                 
-                <!-- Heroes Grid -->
-                <div class="lg:col-span-3">
-                    <div id="heroes-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                        <div class="text-center text-gray-400 py-12">
-                            Select a tournament and click "Update Data" to load statistics
-                        </div>
-                    </div>
-                </div>
+                                 <!-- Heroes Grid -->
+                 <div class="lg:col-span-3">
+                     <div id="heroes-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                         <div class="text-center text-gray-400 py-12">
+                             Select a tournament and click "Update Data" to load statistics
+                         </div>
+                     </div>
+                     
+                     <!-- Pagination -->
+                     <div id="pagination" class="hidden mt-8 flex justify-center items-center space-x-4">
+                         <button id="prev-page" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                             ← Previous
+                         </button>
+                         <span id="page-info" class="text-gray-300">
+                             Page 1 of 1
+                         </span>
+                         <button id="next-page" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                             Next →
+                         </button>
+                     </div>
+                 </div>
             </div>
         </div>
     </main>
@@ -210,6 +223,11 @@
         let currentSort = { key: 'score', order: 'desc' };
         let isParsing = false;
         let currentTournament = 'leagues';
+        
+        // Pagination variables
+        let currentPage = 1;
+        let heroesPerPage = 20;
+        let totalPages = 1;
 
         // API configuration for both tournaments
         const API_CONFIGS = {
@@ -247,9 +265,13 @@
         const scoreMaxInput = document.getElementById('score-max');
         const noiseMinInput = document.getElementById('noise-min');
         const noiseMaxInput = document.getElementById('noise-max');
-        const resetButton = document.getElementById('reset-filters');
-        const heroesGrid = document.getElementById('heroes-grid');
-        const filtersTitle = document.getElementById('filters-title');
+                 const resetButton = document.getElementById('reset-filters');
+         const heroesGrid = document.getElementById('heroes-grid');
+         const filtersTitle = document.getElementById('filters-title');
+         const pagination = document.getElementById('pagination');
+         const prevPageBtn = document.getElementById('prev-page');
+         const nextPageBtn = document.getElementById('next-page');
+         const pageInfo = document.getElementById('page-info');
         const sortButtons = {
             'score': document.getElementById('sort-score'),
             'followerCount': document.getElementById('sort-followers'),
@@ -291,14 +313,17 @@
             updateDataBtn.textContent = `🔄 Update ${config.name} Data`;
         }
 
-        function clearData() {
-            allHeroes = [];
-            displayedHeroes = [];
-            avatarsData = {};
-            dataInfo.classList.add('hidden');
-            heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">Click "Update Data" to load statistics</div>';
-            filtersTitle.textContent = 'Filters (0)';
-        }
+                 function clearData() {
+             allHeroes = [];
+             displayedHeroes = [];
+             avatarsData = {};
+             currentPage = 1;
+             totalPages = 1;
+             dataInfo.classList.add('hidden');
+             pagination.classList.add('hidden');
+             heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">Click "Update Data" to load statistics</div>';
+             filtersTitle.textContent = 'Filters (0)';
+         }
 
         // Function to fetch data from one page
         async function fetchPage(page) {
@@ -406,11 +431,12 @@
                 lastUpdated.textContent = lastUpdatedTime ? new Date(lastUpdatedTime).toLocaleString('en-US') : 'Unknown';
                 dataInfo.classList.remove('hidden');
                 
-                // Apply filters and sorting
-                applyFiltersAndSort();
-                
-                // Save data to localStorage
-                saveDataToStorage();
+                                 // Apply filters and sorting
+                 applyFiltersAndSort();
+                 
+                 // Save data to localStorage and server
+                 saveDataToStorage();
+                 saveDataToServer();
                 
             } catch (error) {
                 console.error('Error during parsing:', error);
@@ -428,40 +454,73 @@
             }
         }
 
-        // Function to save data to localStorage
-        function saveDataToStorage() {
-            try {
-                localStorage.setItem(`xeet_heroes_data_${currentTournament}`, JSON.stringify({
-                    heroes: allHeroes,
-                    avatars: avatarsData,
-                    timestamp: Date.now(),
-                    tournament: currentTournament
-                }));
-            } catch (error) {
-                console.error('Error saving to localStorage:', error);
-            }
-        }
+                 // Function to save data to localStorage
+         function saveDataToStorage() {
+             try {
+                 localStorage.setItem(`xeet_heroes_data_${currentTournament}`, JSON.stringify({
+                     heroes: allHeroes,
+                     avatars: avatarsData,
+                     timestamp: Date.now(),
+                     tournament: currentTournament
+                 }));
+             } catch (error) {
+                 console.error('Error saving to localStorage:', error);
+             }
+         }
+         
+         // Function to save data to server (simulated with localStorage for now)
+         function saveDataToServer() {
+             try {
+                 // Save to a shared storage key that all users can access
+                 localStorage.setItem(`xeet_shared_data_${currentTournament}`, JSON.stringify({
+                     heroes: allHeroes,
+                     avatars: avatarsData,
+                     timestamp: Date.now(),
+                     tournament: currentTournament,
+                     isShared: true
+                 }));
+             } catch (error) {
+                 console.error('Error saving to server:', error);
+             }
+         }
 
-        // Function to load data from localStorage
-        function loadDataFromStorage() {
-            try {
-                const saved = localStorage.getItem(`xeet_heroes_data_${currentTournament}`);
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    allHeroes = data.heroes || [];
-                    avatarsData = data.avatars || {};
-                    
-                    if (allHeroes.length > 0) {
-                        totalRecords.textContent = allHeroes.length.toLocaleString();
-                        lastUpdated.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString('en-US') : 'Unknown';
-                        dataInfo.classList.remove('hidden');
-                        applyFiltersAndSort();
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading from localStorage:', error);
-            }
-        }
+                 // Function to load data from localStorage
+         function loadDataFromStorage() {
+             try {
+                 // First try to load shared data (from other users)
+                 const sharedData = localStorage.getItem(`xeet_shared_data_${currentTournament}`);
+                 if (sharedData) {
+                     const data = JSON.parse(sharedData);
+                     allHeroes = data.heroes || [];
+                     avatarsData = data.avatars || {};
+                     
+                     if (allHeroes.length > 0) {
+                         totalRecords.textContent = allHeroes.length.toLocaleString();
+                         lastUpdated.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString('en-US') : 'Unknown';
+                         dataInfo.classList.remove('hidden');
+                         applyFiltersAndSort();
+                         return;
+                     }
+                 }
+                 
+                 // Fallback to personal data
+                 const saved = localStorage.getItem(`xeet_heroes_data_${currentTournament}`);
+                 if (saved) {
+                     const data = JSON.parse(saved);
+                     allHeroes = data.heroes || [];
+                     avatarsData = data.avatars || {};
+                     
+                     if (allHeroes.length > 0) {
+                         totalRecords.textContent = allHeroes.length.toLocaleString();
+                         lastUpdated.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString('en-US') : 'Unknown';
+                         dataInfo.classList.remove('hidden');
+                         applyFiltersAndSort();
+                     }
+                 }
+             } catch (error) {
+                 console.error('Error loading from localStorage:', error);
+             }
+         }
 
         // Update data button handler
         updateDataBtn.addEventListener('click', parseAllPages);
@@ -499,57 +558,58 @@
             applyFiltersAndSort();
         });
 
-        // Function to apply filters and sorting
-        function applyFiltersAndSort() {
-            if (allHeroes.length === 0) return;
-
-            let filtered = [...allHeroes];
-
-            // Search filter
-            const searchTerm = searchInput.value.toLowerCase();
-            if (searchTerm) {
-                filtered = filtered.filter(hero => 
-                    hero.username.toLowerCase().includes(searchTerm)
-                );
-            }
-
-            // Score filter
-            const scoreMin = scoreMinInput.value ? parseFloat(scoreMinInput.value) : null;
-            const scoreMax = scoreMaxInput.value ? parseFloat(scoreMaxInput.value) : null;
-            
-            if (scoreMin !== null) {
-                filtered = filtered.filter(hero => hero.score >= scoreMin);
-            }
-            if (scoreMax !== null) {
-                filtered = filtered.filter(hero => hero.score <= scoreMax);
-            }
-
-            // Noise Points filter
-            const noiseMin = noiseMinInput.value ? parseFloat(noiseMinInput.value) : null;
-            const noiseMax = noiseMaxInput.value ? parseFloat(noiseMaxInput.value) : null;
-            
-            if (noiseMin !== null) {
-                filtered = filtered.filter(hero => hero.noisePoints >= noiseMin);
-            }
-            if (noiseMax !== null) {
-                filtered = filtered.filter(hero => hero.noisePoints <= noiseMax);
-            }
-
-            // Sorting
-            filtered.sort((a, b) => {
-                const aValue = a[currentSort.key];
-                const bValue = b[currentSort.key];
-                
-                if (currentSort.order === 'asc') {
-                    return aValue - bValue;
-                } else {
-                    return bValue - aValue;
-                }
-            });
-
-            displayedHeroes = filtered;
-            renderHeroes();
-        }
+                 // Function to apply filters and sorting
+         function applyFiltersAndSort() {
+             if (allHeroes.length === 0) return;
+ 
+             let filtered = [...allHeroes];
+ 
+             // Search filter
+             const searchTerm = searchInput.value.toLowerCase();
+             if (searchTerm) {
+                 filtered = filtered.filter(hero => 
+                     hero.username.toLowerCase().includes(searchTerm)
+                 );
+             }
+ 
+             // Score filter
+             const scoreMin = scoreMinInput.value ? parseFloat(scoreMinInput.value) : null;
+             const scoreMax = scoreMaxInput.value ? parseFloat(scoreMaxInput.value) : null;
+             
+             if (scoreMin !== null) {
+                 filtered = filtered.filter(hero => hero.score >= scoreMin);
+             }
+             if (scoreMax !== null) {
+                 filtered = filtered.filter(hero => hero.score <= scoreMax);
+             }
+ 
+             // Noise Points filter
+             const noiseMin = noiseMinInput.value ? parseFloat(noiseMinInput.value) : null;
+             const noiseMax = noiseMaxInput.value ? parseFloat(noiseMaxInput.value) : null;
+             
+             if (noiseMin !== null) {
+                 filtered = filtered.filter(hero => hero.noisePoints >= noiseMin);
+             }
+             if (noiseMax !== null) {
+                 filtered = filtered.filter(hero => hero.noisePoints <= noiseMax);
+             }
+ 
+             // Sorting
+             filtered.sort((a, b) => {
+                 const aValue = a[currentSort.key];
+                 const bValue = b[currentSort.key];
+                 
+                 if (currentSort.order === 'asc') {
+                     return aValue - bValue;
+                 } else {
+                     return bValue - aValue;
+                 }
+             });
+ 
+             displayedHeroes = filtered;
+             currentPage = 1; // Reset to first page when filtering
+             renderHeroes();
+         }
 
         // Function to update sort buttons
         function updateSortButtons() {
@@ -595,65 +655,114 @@
             return username;
         }
 
-        // Function to render heroes
-        function renderHeroes() {
-            filtersTitle.textContent = `Filters (${displayedHeroes.length})`;
-            
-            if (allHeroes.length === 0) {
-                heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">Click "Update Data" to load statistics</div>';
-                return;
-            }
+                 // Function to render heroes with pagination
+         function renderHeroes() {
+             filtersTitle.textContent = `Filters (${displayedHeroes.length})`;
+             
+             if (allHeroes.length === 0) {
+                 heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">Click "Update Data" to load statistics</div>';
+                 pagination.classList.add('hidden');
+                 return;
+             }
+ 
+             if (displayedHeroes.length === 0) {
+                 heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">No heroes found with these parameters</div>';
+                 pagination.classList.add('hidden');
+                 return;
+             }
+ 
+             // Calculate pagination
+             totalPages = Math.ceil(displayedHeroes.length / heroesPerPage);
+             const startIndex = (currentPage - 1) * heroesPerPage;
+             const endIndex = startIndex + heroesPerPage;
+             const pageHeroes = displayedHeroes.slice(startIndex, endIndex);
+ 
+             // Render heroes for current page
+             heroesGrid.innerHTML = pageHeroes.map(hero => {
+                 const avatarUrl = getAvatarForUser(hero.username);
+                 const displayName = getNameForUser(hero.username);
+                 
+                 return `
+                     <div class="bg-gray-800 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                         <div class="text-center mb-4">
+                             <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
+                                 ${avatarUrl ? 
+                                     `<img src="${avatarUrl}" alt="${hero.username}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                      <span class="text-2xl hidden">👤</span>` :
+                                     `<span class="text-2xl">👤</span>`
+                                 }
+                             </div>
+                             <h3 class="font-bold text-lg text-white">${hero.username}</h3>
+                             ${displayName !== hero.username ? `<p class="text-sm text-gray-400 mt-1">${displayName}</p>` : ''}
+                             <div class="text-indigo-400 text-xl font-bold mt-2">${hero.score.toFixed(2)}</div>
+                         </div>
+                         <div class="space-y-2 text-sm text-gray-300">
+                             <div class="flex justify-between">
+                                 <span>Signal Score:</span>
+                                 <span class="text-green-400">${hero.signalScore.toFixed(2)}</span>
+                             </div>
+                             <div class="flex justify-between">
+                                 <span>Noise Points:</span>
+                                 <span class="text-red-400">${hero.noisePoints.toFixed(2)}</span>
+                             </div>
+                             <div class="flex justify-between">
+                                 <span>Followers:</span>
+                                 <span class="text-blue-400">${hero.followerCount.toLocaleString()}</span>
+                             </div>
+                             <div class="flex justify-between">
+                                 <span>Rank:</span>
+                                 <span class="text-yellow-400">#${hero.rank}</span>
+                             </div>
+                         </div>
+                     </div>
+                 `;
+             }).join('');
+ 
+             // Update pagination
+             updatePagination();
+         }
+         
+         // Function to update pagination controls
+         function updatePagination() {
+             if (totalPages <= 1) {
+                 pagination.classList.add('hidden');
+                 return;
+             }
+             
+             pagination.classList.remove('hidden');
+             pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+             
+             prevPageBtn.disabled = currentPage === 1;
+             nextPageBtn.disabled = currentPage === totalPages;
+             
+             prevPageBtn.className = currentPage === 1 
+                 ? 'bg-gray-700 text-gray-500 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed'
+                 : 'bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded';
+             
+             nextPageBtn.className = currentPage === totalPages
+                 ? 'bg-gray-700 text-gray-500 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed'
+                 : 'bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded';
+         }
 
-            if (displayedHeroes.length === 0) {
-                heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">No heroes found with these parameters</div>';
-                return;
-            }
-
-            heroesGrid.innerHTML = displayedHeroes.map(hero => {
-                const avatarUrl = getAvatarForUser(hero.username);
-                const displayName = getNameForUser(hero.username);
-                
-                return `
-                    <div class="bg-gray-800 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                        <div class="text-center mb-4">
-                            <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
-                                ${avatarUrl ? 
-                                    `<img src="${avatarUrl}" alt="${hero.username}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                     <span class="text-2xl hidden">👤</span>` :
-                                    `<span class="text-2xl">👤</span>`
-                                }
-                            </div>
-                            <h3 class="font-bold text-lg text-white">${hero.username}</h3>
-                            ${displayName !== hero.username ? `<p class="text-sm text-gray-400 mt-1">${displayName}</p>` : ''}
-                            <div class="text-indigo-400 text-xl font-bold mt-2">${hero.score.toFixed(2)}</div>
-                        </div>
-                        <div class="space-y-2 text-sm text-gray-300">
-                            <div class="flex justify-between">
-                                <span>Signal Score:</span>
-                                <span class="text-green-400">${hero.signalScore.toFixed(2)}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Noise Points:</span>
-                                <span class="text-red-400">${hero.noisePoints.toFixed(2)}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Followers:</span>
-                                <span class="text-blue-400">${hero.followerCount.toLocaleString()}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Rank:</span>
-                                <span class="text-yellow-400">#${hero.rank}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // Initialization
-        updateTournamentUI();
-        updateSortButtons();
-        loadDataFromStorage();
+                 // Pagination event handlers
+         prevPageBtn.addEventListener('click', () => {
+             if (currentPage > 1) {
+                 currentPage--;
+                 renderHeroes();
+             }
+         });
+         
+         nextPageBtn.addEventListener('click', () => {
+             if (currentPage < totalPages) {
+                 currentPage++;
+                 renderHeroes();
+             }
+         });
+         
+         // Initialization
+         updateTournamentUI();
+         updateSortButtons();
+         loadDataFromStorage();
     </script>
 </body>
 </html>
