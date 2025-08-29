@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XeetFlow - Crypto Influencers Dashboard</title>
+    <title>XeetFlow - Crypto Twitter Analytics Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script>
@@ -42,6 +42,24 @@
     <!-- Main Content -->
     <main class="flex-1">
         <div class="container mx-auto px-4 py-8">
+            <!-- Tournament Selector -->
+            <div class="mb-6">
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <h2 class="text-lg font-semibold mb-4">Select Tournament</h2>
+                    <div class="flex space-x-4">
+                        <button id="leagues-btn" class="tournament-btn bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                            🏆 Leagues Tournament
+                        </button>
+                        <button id="signals-btn" class="tournament-btn bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                            📊 Signals Tournament
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-400 mt-2">
+                        <span id="tournament-info">Leagues: 431 pages, ~8,620 records</span>
+                    </p>
+                </div>
+            </div>
+
             <!-- Parsing Status -->
             <div id="parsing-status" class="hidden mb-6">
                 <div class="bg-gray-800 rounded-lg p-4 border-l-4 border-indigo-500">
@@ -141,7 +159,7 @@
                 <div class="lg:col-span-3">
                     <div id="heroes-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                         <div class="text-center text-gray-400 py-12">
-                            Click "Update Data" to load statistics
+                            Select a tournament and click "Update Data" to load statistics
                         </div>
                     </div>
                 </div>

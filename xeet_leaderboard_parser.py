@@ -7,15 +7,43 @@ from datetime import datetime
 from typing import List, Dict, Any
 
 class XeetLeaderboardParser:
-    def __init__(self):
-        self.base_url = "https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard"
-        self.total_pages = 431
+    def __init__(self, tournament_type="leagues"):
+        """
+        Initialize parser for specific tournament type
+        tournament_type: "leagues" or "signals"
+        """
+        self.tournament_type = tournament_type
+        
+        # API endpoints for different tournaments
+        self.tournament_configs = {
+            "leagues": {
+                "url": "https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard",
+                "total_pages": 431,
+                "csv_file": "xeet_leagues_stats.csv",
+                "avatars_file": "xeet_leagues_avatars.csv",
+                "metadata_file": "xeet_leagues_metadata.json"
+            },
+            "signals": {
+                "url": "https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard",
+                "total_pages": 360,  # Based on the API response showing 360 pages
+                "csv_file": "xeet_signals_stats.csv",
+                "avatars_file": "xeet_signals_avatars.csv",
+                "metadata_file": "xeet_signals_metadata.json"
+            }
+        }
+        
+        # Set configuration based on tournament type
+        config = self.tournament_configs[tournament_type]
+        self.base_url = config["url"]
+        self.csv_file = config["csv_file"]
+        self.avatars_file = config["avatars_file"]
+        self.metadata_file = config["metadata_file"]
+        self.total_pages = config["total_pages"]
         self.limit = 20
-        self.csv_file = "xeet_crypto_creators_stats.csv"
-        self.avatars_file = "xeet_avatars.csv"
-        self.metadata_file = "xeet_metadata.json"
+        self.delay = 0.5
+        
         self.session = requests.Session()
-        # Добавляем заголовки для имитации браузера
+        # Add headers to mimic browser
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Accept': 'application/json, text/plain, */*',
@@ -223,7 +251,7 @@ class XeetLeaderboardParser:
     
     def run(self):
         """Основной метод для запуска парсера"""
-        print("Начинаем парсинг лидерборда Xeet.ai...")
+        print(f"Начинаем парсинг лидерборда Xeet.ai ({self.tournament_type.upper()})...")
         print(f"Всего страниц для обработки: {self.total_pages}")
         print("-" * 50)
         
@@ -262,7 +290,19 @@ class XeetLeaderboardParser:
 
 def main():
     """Точка входа в программу"""
-    parser = XeetLeaderboardParser()
+    import sys
+    
+    # Check command line arguments
+    tournament_type = "leagues"  # default
+    if len(sys.argv) > 1:
+        tournament_type = sys.argv[1].lower()
+        if tournament_type not in ["leagues", "signals"]:
+            print("Error: tournament_type must be 'leagues' or 'signals'")
+            print("Usage: python xeet_leaderboard_parser.py [leagues|signals]")
+            sys.exit(1)
+    
+    print(f"Starting parser for {tournament_type.upper()} tournament...")
+    parser = XeetLeaderboardParser(tournament_type)
     parser.run()
 
 if __name__ == "__main__":

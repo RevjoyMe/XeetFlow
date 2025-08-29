@@ -4,7 +4,12 @@ A comprehensive platform for parsing and analyzing crypto influencers data from 
 
 ## Description
 
-The platform automatically collects data from all tournament participants by processing 431 API pages with pagination. Extracted information is saved to CSV files for further analysis.
+The platform automatically collects data from all tournament participants by processing multiple API pages with pagination. The platform supports two different tournaments:
+
+- **🏆 Leagues Tournament**: 431 pages, ~8,620 records
+- **📊 Signals Tournament**: 360 pages, ~7,200 records
+
+Each tournament has its own leaderboard with different statistics and participants. Extracted information is saved to separate CSV files for each tournament.
 
 ## Features
 
@@ -42,16 +47,23 @@ pip install -r requirements.txt
 
 ### Data Parsing
 
-Run the parser script:
+Run the parser script for specific tournaments:
 
 ```bash
+# Parse Leagues Tournament (default)
+python xeet_leaderboard_parser.py leagues
+
+# Parse Signals Tournament
+python xeet_leaderboard_parser.py signals
+
+# Or just run without arguments (defaults to leagues)
 python xeet_leaderboard_parser.py
 ```
 
 The script will automatically:
-1. Start processing all 431 pages
+1. Start processing all pages for the selected tournament
 2. Display progress in the console
-3. Save the result to `xeet_crypto_creators_stats.csv` file
+3. Save the result to tournament-specific CSV files
 
 ### Data Analysis
 
@@ -94,24 +106,34 @@ start index_standalone.html
 
 **🚀 Standalone Application (index_standalone.html):**
 - ⚡ Built-in API parsing directly in browser
+- 🏆 Support for both Leagues and Signals tournaments
 - 🔄 "Update Data" button for loading fresh statistics
 - 📊 Progress bar and real-time loading status
-- 💾 Automatic data saving in localStorage
+- 💾 Automatic data saving in localStorage (separate for each tournament)
 - 🎯 All filtering and sorting functions
 - 👤 Automatic avatar display
 - ⏱️ Request delays to reduce server load
 
 ## Output Files
 
-### Main Data
-The result is saved to `xeet_crypto_creators_stats.csv` file in UTF-8 encoding with the following headers:
+### Leagues Tournament Files
+- `xeet_leagues_stats.csv` - Main statistics data
+- `xeet_leagues_avatars.csv` - Avatar data
+- `xeet_leagues_metadata.json` - Parsing metadata
+
+### Signals Tournament Files
+- `xeet_signals_stats.csv` - Main statistics data
+- `xeet_signals_avatars.csv` - Avatar data
+- `xeet_signals_metadata.json` - Parsing metadata
+
+### Data Structure
+Main statistics CSV files contain the following headers:
 
 ```csv
 rank,username,followerCount,score,signalScore,noisePoints,totalEngagement,engagementRate,averageEngagementPerPost
 ```
 
-### Avatar Data
-Additionally, `xeet_avatars.csv` file is created with avatar data:
+Avatar CSV files contain:
 
 ```csv
 username,avatar,name
@@ -122,16 +144,23 @@ Where:
 - `avatar` - avatar link
 - `name` - display name
 
-## API Endpoint
+## API Endpoints
 
-The script uses the following API endpoint:
+The script uses different API endpoints for each tournament:
+
+### Leagues Tournament
 ```
 https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard
 ```
-
-Parameters:
 - `page` - page number (1-431)
-- `limit` - number of records per page (20)
+- `limit` - records per page (20)
+
+### Signals Tournament
+```
+https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard
+```
+- `page` - page number (1-360)
+- `limit` - records per page (20)
 
 ## Error Handling
 
@@ -144,8 +173,8 @@ The script includes:
 ## Performance
 
 - Delay between requests: 0.5 seconds
-- Expected execution time: ~4 minutes
-- Expected number of records: ~8,620 (431 pages × 20 records)
+- Expected execution time: ~4 minutes (Leagues), ~3 minutes (Signals)
+- Expected number of records: ~8,620 (Leagues: 431 pages × 20 records), ~7,200 (Signals: 360 pages × 20 records)
 
 ## Project Structure
 
@@ -157,9 +186,12 @@ The script includes:
 ├── index.html                 # Web application for data viewing
 ├── index_with_avatars.html    # Enhanced version with avatar support
 ├── index_standalone.html      # 🚀 STANDALONE application with built-in parsing
-├── xeet_crypto_creators_stats.csv  # Main data (statistics)
-├── xeet_avatars.csv           # Avatar data (usernames + links)
-└── xeet_metadata.json         # Parsing metadata
+├── xeet_leagues_stats.csv     # Leagues tournament data
+├── xeet_leagues_avatars.csv   # Leagues tournament avatars
+├── xeet_leagues_metadata.json # Leagues tournament metadata
+├── xeet_signals_stats.csv     # Signals tournament data
+├── xeet_signals_avatars.csv   # Signals tournament avatars
+└── xeet_signals_metadata.json # Signals tournament metadata
 ```
 
 ## Usage Example
@@ -167,11 +199,13 @@ The script includes:
 ```python
 from xeet_leaderboard_parser import XeetLeaderboardParser
 
-# Create parser instance
-parser = XeetLeaderboardParser()
+# Create parser instance for Leagues tournament
+parser_leagues = XeetLeaderboardParser("leagues")
+parser_leagues.run()
 
-# Run parsing
-parser.run()
+# Create parser instance for Signals tournament
+parser_signals = XeetLeaderboardParser("signals")
+parser_signals.run()
 ```
 
 ## Notes
