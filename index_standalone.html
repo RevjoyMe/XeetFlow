@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XeetFlow - Crypto Influencers Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            800: '#1f2937',
+                            900: '#111827'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+                        <span class="text-2xl font-bold text-white">XF</span>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-indigo-400">XeetFlow</h1>
+                        <p class="text-sm text-gray-400">Crypto Twitter Analytics Platform</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Parsing Status -->
+            <div id="parsing-status" class="hidden mb-6">
+                <div class="bg-gray-800 rounded-lg p-4 border-l-4 border-indigo-500">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-indigo-400">Parsing Data...</h3>
+                            <p id="parsing-progress" class="text-sm text-gray-300">Preparing to load...</p>
+                        </div>
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Filters Panel -->
+                <div class="lg:col-span-1">
+                    <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                        <h2 class="text-xl font-semibold mb-6" id="filters-title">Filters (0)</h2>
+                        
+                        <!-- Update Data Button -->
+                        <div class="mb-6">
+                            <button id="update-data-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded font-medium transition-colors">
+                                🔄 Update Data from Xeet.ai
+                            </button>
+                            <p class="text-xs text-gray-400 mt-2 text-center">
+                                Loads fresh data from the API
+                            </p>
+                        </div>
+                        
+                        <!-- Data Info -->
+                        <div id="data-info" class="mb-6 hidden">
+                            <div class="bg-gray-700 rounded p-3">
+                                <h3 class="text-sm font-medium text-green-400 mb-2">📊 Data Loaded</h3>
+                                <div class="text-xs space-y-1">
+                                    <div>Total Records: <span id="total-records" class="text-blue-400">0</span></div>
+                                    <div>Last Updated: <span id="last-updated" class="text-yellow-400">-</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Search -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">Search by username</label>
+                            <input type="text" id="search-input" placeholder="Enter username..." class="w-full p-2 bg-gray-700 border border-gray-600 rounded text-sm">
+                        </div>
+                        
+                        <!-- Sorting -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">Sort by</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button id="sort-score" class="sort-btn bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium">
+                                    Score ▼
+                                </button>
+                                <button id="sort-followers" class="sort-btn bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm font-medium">
+                                    Followers
+                                </button>
+                                <button id="sort-signal" class="sort-btn bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm font-medium">
+                                    Signal
+                                </button>
+                                <button id="sort-noise" class="sort-btn bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm font-medium">
+                                    Noise
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Score Filter -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">Score Filter</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" id="score-min" placeholder="Min" class="p-2 bg-gray-700 border border-gray-600 rounded text-sm">
+                                <input type="number" id="score-max" placeholder="Max" class="p-2 bg-gray-700 border border-gray-600 rounded text-sm">
+                            </div>
+                        </div>
+                        
+                        <!-- Noise Points Filter -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">Noise Points Filter</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" id="noise-min" placeholder="Min" class="p-2 bg-gray-700 border border-gray-600 rounded text-sm">
+                                <input type="number" id="noise-max" placeholder="Max" class="p-2 bg-gray-700 border border-gray-600 rounded text-sm">
+                            </div>
+                        </div>
+                        
+                        <!-- Reset Button -->
+                        <button id="reset-filters" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded font-medium">
+                            Reset Filters
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Heroes Grid -->
+                <div class="lg:col-span-3">
+                    <div id="heroes-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                        <div class="text-center text-gray-400 py-12">
+                            Click "Update Data" to load statistics
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 border-t border-gray-700 mt-auto">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row items-center justify-between">
+                <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                    <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center">
+                        <span class="text-sm font-bold text-white">XF</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-400">XeetFlow</h3>
+                        <p class="text-xs text-gray-400">Crypto Twitter Analytics Platform</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="https://x.com/jokergeeme" target="_blank" class="flex items-center space-x-2 text-gray-300 hover:text-indigo-400 transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        <span class="text-sm">Dev</span>
+                    </a>
+                    <a href="https://x.com/xeetdotai" target="_blank" class="flex items-center space-x-2 text-gray-300 hover:text-indigo-400 transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        <span class="text-sm">Xeet</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Global variables
+        let allHeroes = [];
+        let displayedHeroes = [];
+        let avatarsData = {};
+        let currentSort = { key: 'score', order: 'desc' };
+        let isParsing = false;
+
+        // API configuration
+        const API_CONFIG = {
+            baseUrl: 'https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard',
+            totalPages: 431,
+            limit: 20,
+            delay: 500 // 0.5 seconds between requests
+        };
+
+        // DOM elements
+        const updateDataBtn = document.getElementById('update-data-btn');
+        const parsingStatus = document.getElementById('parsing-status');
+        const parsingProgress = document.getElementById('parsing-progress');
+        const progressBar = document.getElementById('progress-bar');
+        const dataInfo = document.getElementById('data-info');
+        const totalRecords = document.getElementById('total-records');
+        const lastUpdated = document.getElementById('last-updated');
+        const searchInput = document.getElementById('search-input');
+        const scoreMinInput = document.getElementById('score-min');
+        const scoreMaxInput = document.getElementById('score-max');
+        const noiseMinInput = document.getElementById('noise-min');
+        const noiseMaxInput = document.getElementById('noise-max');
+        const resetButton = document.getElementById('reset-filters');
+        const heroesGrid = document.getElementById('heroes-grid');
+        const filtersTitle = document.getElementById('filters-title');
+        const sortButtons = {
+            'score': document.getElementById('sort-score'),
+            'followerCount': document.getElementById('sort-followers'),
+            'signalScore': document.getElementById('sort-signal'),
+            'noisePoints': document.getElementById('sort-noise')
+        };
+
+        // Delay function
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Function to fetch data from one page
+        async function fetchPage(page) {
+            const params = new URLSearchParams({
+                page: page,
+                limit: API_CONFIG.limit
+            });
+
+            const response = await fetch(`${API_CONFIG.baseUrl}?${params}`, {
+                method: 'GET',
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'application/json, text/plain, */*',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Connection': 'keep-alive',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        // Function to parse all pages
+        async function parseAllPages() {
+            if (isParsing) return;
+            
+            isParsing = true;
+            allHeroes = [];
+            avatarsData = {};
+            
+            // Show parsing status
+            parsingStatus.classList.remove('hidden');
+            updateDataBtn.disabled = true;
+            updateDataBtn.textContent = '⏳ Parsing...';
+            
+            try {
+                let lastUpdatedTime = '';
+                
+                for (let page = 1; page <= API_CONFIG.totalPages; page++) {
+                    // Update progress
+                    const progress = ((page - 1) / API_CONFIG.totalPages) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    parsingProgress.textContent = `Page ${page}/${API_CONFIG.totalPages}...`;
+                    
+                    try {
+                        const pageData = await fetchPage(page);
+                        
+                        if (pageData && pageData.data && Array.isArray(pageData.data)) {
+                            // Process page data
+                            pageData.data.forEach(item => {
+                                if (item && item.user && item.user.username) {
+                                    // Main data
+                                    const hero = {
+                                        rank: parseInt(item.rank) || 0,
+                                        username: item.user.username,
+                                        followerCount: parseInt(item.user.followerCount) || 0,
+                                        score: parseFloat(item.score || 0),
+                                        signalScore: parseFloat(item.signalScore || 0),
+                                        noisePoints: parseFloat(item.noisePoints || 0),
+                                        totalEngagement: parseInt(item.totalEngagement || 0),
+                                        engagementRate: parseFloat(item.engagementRate || 0),
+                                        averageEngagementPerPost: parseFloat(item.averageEngagementPerPost || 0)
+                                    };
+                                    
+                                    allHeroes.push(hero);
+                                    
+                                    // Avatar data
+                                    if (item.user.avatar) {
+                                        avatarsData[item.user.username] = {
+                                            avatar: item.user.avatar,
+                                            name: item.user.name || item.user.username
+                                        };
+                                    }
+                                    
+                                    // Save last updated time
+                                    if (item.lastUpdated && !lastUpdatedTime) {
+                                        lastUpdatedTime = item.lastUpdated;
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // Delay between requests
+                        await delay(API_CONFIG.delay);
+                        
+                    } catch (error) {
+                        console.error(`Error loading page ${page}:`, error);
+                        // Continue with next page
+                    }
+                }
+                
+                // Finish parsing
+                progressBar.style.width = '100%';
+                parsingProgress.textContent = `Loaded ${allHeroes.length} records`;
+                
+                // Update data info
+                totalRecords.textContent = allHeroes.length.toLocaleString();
+                lastUpdated.textContent = lastUpdatedTime ? new Date(lastUpdatedTime).toLocaleString('en-US') : 'Unknown';
+                dataInfo.classList.remove('hidden');
+                
+                // Apply filters and sorting
+                applyFiltersAndSort();
+                
+                // Save data to localStorage
+                saveDataToStorage();
+                
+            } catch (error) {
+                console.error('Error during parsing:', error);
+                parsingProgress.textContent = 'Error loading data';
+                alert('An error occurred while loading data. Please try again.');
+            } finally {
+                // Hide parsing status
+                setTimeout(() => {
+                    parsingStatus.classList.add('hidden');
+                    updateDataBtn.disabled = false;
+                    updateDataBtn.textContent = '🔄 Update Data from Xeet.ai';
+                }, 2000);
+                
+                isParsing = false;
+            }
+        }
+
+        // Function to save data to localStorage
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem('xeet_heroes_data', JSON.stringify({
+                    heroes: allHeroes,
+                    avatars: avatarsData,
+                    timestamp: Date.now()
+                }));
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+            }
+        }
+
+        // Function to load data from localStorage
+        function loadDataFromStorage() {
+            try {
+                const saved = localStorage.getItem('xeet_heroes_data');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    allHeroes = data.heroes || [];
+                    avatarsData = data.avatars || {};
+                    
+                    if (allHeroes.length > 0) {
+                        totalRecords.textContent = allHeroes.length.toLocaleString();
+                        lastUpdated.textContent = data.timestamp ? new Date(data.timestamp).toLocaleString('en-US') : 'Unknown';
+                        dataInfo.classList.remove('hidden');
+                        applyFiltersAndSort();
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading from localStorage:', error);
+            }
+        }
+
+        // Update data button handler
+        updateDataBtn.addEventListener('click', parseAllPages);
+
+        // Filter event handlers
+        searchInput.addEventListener('input', applyFiltersAndSort);
+        scoreMinInput.addEventListener('input', applyFiltersAndSort);
+        scoreMaxInput.addEventListener('input', applyFiltersAndSort);
+        noiseMinInput.addEventListener('input', applyFiltersAndSort);
+        noiseMaxInput.addEventListener('input', applyFiltersAndSort);
+
+        // Sorting handlers
+        Object.keys(sortButtons).forEach(key => {
+            sortButtons[key].addEventListener('click', () => {
+                if (currentSort.key === key) {
+                    currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.key = key;
+                    currentSort.order = 'desc';
+                }
+                updateSortButtons();
+                applyFiltersAndSort();
+            });
+        });
+
+        // Reset filters handler
+        resetButton.addEventListener('click', () => {
+            searchInput.value = '';
+            scoreMinInput.value = '';
+            scoreMaxInput.value = '';
+            noiseMinInput.value = '';
+            noiseMaxInput.value = '';
+            currentSort = { key: 'score', order: 'desc' };
+            updateSortButtons();
+            applyFiltersAndSort();
+        });
+
+        // Function to apply filters and sorting
+        function applyFiltersAndSort() {
+            if (allHeroes.length === 0) return;
+
+            let filtered = [...allHeroes];
+
+            // Search filter
+            const searchTerm = searchInput.value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(hero => 
+                    hero.username.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Score filter
+            const scoreMin = scoreMinInput.value ? parseFloat(scoreMinInput.value) : null;
+            const scoreMax = scoreMaxInput.value ? parseFloat(scoreMaxInput.value) : null;
+            
+            if (scoreMin !== null) {
+                filtered = filtered.filter(hero => hero.score >= scoreMin);
+            }
+            if (scoreMax !== null) {
+                filtered = filtered.filter(hero => hero.score <= scoreMax);
+            }
+
+            // Noise Points filter
+            const noiseMin = noiseMinInput.value ? parseFloat(noiseMinInput.value) : null;
+            const noiseMax = noiseMaxInput.value ? parseFloat(noiseMaxInput.value) : null;
+            
+            if (noiseMin !== null) {
+                filtered = filtered.filter(hero => hero.noisePoints >= noiseMin);
+            }
+            if (noiseMax !== null) {
+                filtered = filtered.filter(hero => hero.noisePoints <= noiseMax);
+            }
+
+            // Sorting
+            filtered.sort((a, b) => {
+                const aValue = a[currentSort.key];
+                const bValue = b[currentSort.key];
+                
+                if (currentSort.order === 'asc') {
+                    return aValue - bValue;
+                } else {
+                    return bValue - aValue;
+                }
+            });
+
+            displayedHeroes = filtered;
+            renderHeroes();
+        }
+
+        // Function to update sort buttons
+        function updateSortButtons() {
+            Object.keys(sortButtons).forEach(key => {
+                const button = sortButtons[key];
+                if (key === currentSort.key) {
+                    button.className = 'sort-btn bg-indigo-600 text-white px-3 py-2 rounded text-sm font-medium';
+                    const arrow = currentSort.order === 'asc' ? ' ▲' : ' ▼';
+                    button.textContent = getSortButtonText(key) + arrow;
+                } else {
+                    button.className = 'sort-btn bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-sm font-medium';
+                    button.textContent = getSortButtonText(key);
+                }
+            });
+        }
+
+        // Function to get sort button text
+        function getSortButtonText(key) {
+            const texts = {
+                'score': 'Score',
+                'followerCount': 'Followers',
+                'signalScore': 'Signal',
+                'noisePoints': 'Noise'
+            };
+            return texts[key] || key;
+        }
+
+        // Function to get avatar for user
+        function getAvatarForUser(username) {
+            const avatarInfo = avatarsData[username];
+            if (avatarInfo && avatarInfo.avatar) {
+                return avatarInfo.avatar;
+            }
+            return null;
+        }
+
+        // Function to get name for user
+        function getNameForUser(username) {
+            const avatarInfo = avatarsData[username];
+            if (avatarInfo && avatarInfo.name) {
+                return avatarInfo.name;
+            }
+            return username;
+        }
+
+        // Function to render heroes
+        function renderHeroes() {
+            filtersTitle.textContent = `Filters (${displayedHeroes.length})`;
+            
+            if (allHeroes.length === 0) {
+                heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">Click "Update Data" to load statistics</div>';
+                return;
+            }
+
+            if (displayedHeroes.length === 0) {
+                heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">No heroes found with these parameters</div>';
+                return;
+            }
+
+            heroesGrid.innerHTML = displayedHeroes.map(hero => {
+                const avatarUrl = getAvatarForUser(hero.username);
+                const displayName = getNameForUser(hero.username);
+                
+                return `
+                    <div class="bg-gray-800 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                        <div class="text-center mb-4">
+                            <div class="w-16 h-16 mx-auto mb-3 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center">
+                                ${avatarUrl ? 
+                                    `<img src="${avatarUrl}" alt="${hero.username}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                     <span class="text-2xl hidden">👤</span>` :
+                                    `<span class="text-2xl">👤</span>`
+                                }
+                            </div>
+                            <h3 class="font-bold text-lg text-white">${hero.username}</h3>
+                            ${displayName !== hero.username ? `<p class="text-sm text-gray-400 mt-1">${displayName}</p>` : ''}
+                            <div class="text-indigo-400 text-xl font-bold mt-2">${hero.score.toFixed(2)}</div>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-300">
+                            <div class="flex justify-between">
+                                <span>Signal Score:</span>
+                                <span class="text-green-400">${hero.signalScore.toFixed(2)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Noise Points:</span>
+                                <span class="text-red-400">${hero.noisePoints.toFixed(2)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Followers:</span>
+                                <span class="text-blue-400">${hero.followerCount.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Rank:</span>
+                                <span class="text-yellow-400">#${hero.rank}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Initialization
+        updateSortButtons();
+        loadDataFromStorage();
+    </script>
+</body>
+</html>
