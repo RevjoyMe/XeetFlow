@@ -6,8 +6,8 @@ A comprehensive platform for parsing and analyzing crypto influencers data from 
 
 The platform automatically collects data from all tournament participants by processing multiple API pages with pagination. The platform supports two different tournaments:
 
-- **🏆 Leagues Tournament**: 431 pages, ~8,620 records
-- **📊 Signals Tournament**: 360 pages, ~7,200 records
+- **🏆 Leagues Tournament**: 1797 pages, ~35,940 records
+- **📊 Signals Tournament**: 431 pages, ~8,620 records
 
 Each tournament has its own leaderboard with different statistics and participants. Extracted information is saved to separate CSV files for each tournament.
 
@@ -150,16 +150,16 @@ The script uses different API endpoints for each tournament:
 
 ### Leagues Tournament
 ```
-https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard
+https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard
 ```
-- `page` - page number (1-431)
+- `page` - page number (1-1797)
 - `limit` - records per page (20)
 
 ### Signals Tournament
 ```
-https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard
+https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard
 ```
-- `page` - page number (1-360)
+- `page` - page number (1-431)
 - `limit` - records per page (20)
 
 ## Error Handling
@@ -173,8 +173,8 @@ The script includes:
 ## Performance
 
 - Delay between requests: 0.5 seconds
-- Expected execution time: ~4 minutes (Leagues), ~3 minutes (Signals)
-- Expected number of records: ~8,620 (Leagues: 431 pages × 20 records), ~7,200 (Signals: 360 pages × 20 records)
+- Expected execution time: ~15 minutes (Leagues), ~4 minutes (Signals)
+- Expected number of records: ~35,940 (Leagues: 1797 pages × 20 records), ~8,620 (Signals: 431 pages × 20 records)
 
 ## Project Structure
 

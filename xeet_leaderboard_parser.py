@@ -17,15 +17,15 @@ class XeetLeaderboardParser:
         # API endpoints for different tournaments
         self.tournament_configs = {
             "leagues": {
-                "url": "https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard",
-                "total_pages": 431,
+                "url": "https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard",
+                "total_pages": 1797,
                 "csv_file": "xeet_leagues_stats.csv",
                 "avatars_file": "xeet_leagues_avatars.csv",
                 "metadata_file": "xeet_leagues_metadata.json"
             },
             "signals": {
-                "url": "https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard",
-                "total_pages": 360,  # Based on the API response showing 360 pages
+                "url": "https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard",
+                "total_pages": 431,
                 "csv_file": "xeet_signals_stats.csv",
                 "avatars_file": "xeet_signals_avatars.csv",
                 "metadata_file": "xeet_signals_metadata.json"

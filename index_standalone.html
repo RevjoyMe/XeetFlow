@@ -205,16 +205,32 @@
         let avatarsData = {};
         let currentSort = { key: 'score', order: 'desc' };
         let isParsing = false;
+        let currentTournament = 'leagues';
 
-        // API configuration
-        const API_CONFIG = {
-            baseUrl: 'https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard',
-            totalPages: 431,
-            limit: 20,
-            delay: 500 // 0.5 seconds between requests
+        // API configuration for both tournaments
+        const API_CONFIGS = {
+            leagues: {
+                baseUrl: 'https://www.xeet.ai/api/tournaments/xeet-tournament-1/leaderboard',
+                totalPages: 1797,
+                limit: 20,
+                delay: 500,
+                name: 'Leagues Tournament',
+                info: 'Leagues: 1797 pages, ~35,940 records'
+            },
+            signals: {
+                baseUrl: 'https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard',
+                totalPages: 431,
+                limit: 20,
+                delay: 500,
+                name: 'Signals Tournament',
+                info: 'Signals: 431 pages, ~8,620 records'
+            }
         };
 
         // DOM elements
+        const leaguesBtn = document.getElementById('leagues-btn');
+        const signalsBtn = document.getElementById('signals-btn');
+        const tournamentInfo = document.getElementById('tournament-info');
         const updateDataBtn = document.getElementById('update-data-btn');
         const parsingStatus = document.getElementById('parsing-status');
         const parsingProgress = document.getElementById('parsing-progress');
@@ -242,14 +258,53 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
+        // Tournament selection handlers
+        leaguesBtn.addEventListener('click', () => switchTournament('leagues'));
+        signalsBtn.addEventListener('click', () => switchTournament('signals'));
+
+        function switchTournament(tournament) {
+            currentTournament = tournament;
+            updateTournamentUI();
+            clearData();
+        }
+
+        function updateTournamentUI() {
+            const config = API_CONFIGS[currentTournament];
+            
+            // Update button styles
+            leaguesBtn.className = currentTournament === 'leagues' 
+                ? 'tournament-btn bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium transition-colors'
+                : 'tournament-btn bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors';
+            
+            signalsBtn.className = currentTournament === 'signals'
+                ? 'tournament-btn bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium transition-colors'
+                : 'tournament-btn bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-colors';
+            
+            // Update info text
+            tournamentInfo.textContent = config.info;
+            
+            // Update button text
+            updateDataBtn.textContent = `🔄 Update ${config.name} Data`;
+        }
+
+        function clearData() {
+            allHeroes = [];
+            displayedHeroes = [];
+            avatarsData = {};
+            dataInfo.classList.add('hidden');
+            heroesGrid.innerHTML = '<div class="text-center text-gray-400 py-12">Click "Update Data" to load statistics</div>';
+            filtersTitle.textContent = 'Filters (0)';
+        }
+
         // Function to fetch data from one page
         async function fetchPage(page) {
+            const config = API_CONFIGS[currentTournament];
             const params = new URLSearchParams({
                 page: page,
-                limit: API_CONFIG.limit
+                limit: config.limit
             });
 
-            const response = await fetch(`${API_CONFIG.baseUrl}?${params}`, {
+            const response = await fetch(`${config.baseUrl}?${params}`, {
                 method: 'GET',
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -275,6 +330,8 @@
             allHeroes = [];
             avatarsData = {};
             
+            const config = API_CONFIGS[currentTournament];
+            
             // Show parsing status
             parsingStatus.classList.remove('hidden');
             updateDataBtn.disabled = true;
@@ -283,11 +340,11 @@
             try {
                 let lastUpdatedTime = '';
                 
-                for (let page = 1; page <= API_CONFIG.totalPages; page++) {
+                for (let page = 1; page <= config.totalPages; page++) {
                     // Update progress
-                    const progress = ((page - 1) / API_CONFIG.totalPages) * 100;
+                    const progress = ((page - 1) / config.totalPages) * 100;
                     progressBar.style.width = `${progress}%`;
-                    parsingProgress.textContent = `Page ${page}/${API_CONFIG.totalPages}...`;
+                    parsingProgress.textContent = `Page ${page}/${config.totalPages}...`;
                     
                     try {
                         const pageData = await fetchPage(page);
@@ -328,7 +385,7 @@
                         }
                         
                         // Delay between requests
-                        await delay(API_CONFIG.delay);
+                        await delay(config.delay);
                         
                     } catch (error) {
                         console.error(`Error loading page ${page}:`, error);
@@ -360,7 +417,7 @@
                 setTimeout(() => {
                     parsingStatus.classList.add('hidden');
                     updateDataBtn.disabled = false;
-                    updateDataBtn.textContent = '🔄 Update Data from Xeet.ai';
+                    updateDataBtn.textContent = `🔄 Update ${config.name} Data`;
                 }, 2000);
                 
                 isParsing = false;
@@ -370,10 +427,11 @@
         // Function to save data to localStorage
         function saveDataToStorage() {
             try {
-                localStorage.setItem('xeet_heroes_data', JSON.stringify({
+                localStorage.setItem(`xeet_heroes_data_${currentTournament}`, JSON.stringify({
                     heroes: allHeroes,
                     avatars: avatarsData,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    tournament: currentTournament
                 }));
             } catch (error) {
                 console.error('Error saving to localStorage:', error);
@@ -383,7 +441,7 @@
         // Function to load data from localStorage
         function loadDataFromStorage() {
             try {
-                const saved = localStorage.getItem('xeet_heroes_data');
+                const saved = localStorage.getItem(`xeet_heroes_data_${currentTournament}`);
                 if (saved) {
                     const data = JSON.parse(saved);
                     allHeroes = data.heroes || [];
@@ -589,6 +647,7 @@
         }
 
         // Initialization
+        updateTournamentUI();
         updateSortButtons();
         loadDataFromStorage();
     </script>
