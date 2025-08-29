@@ -124,14 +124,14 @@ Where:
 
 ## API Endpoint
 
-Скрипт использует следующий API endpoint:
+The script uses the following API endpoint:
 ```
 https://www.xeet.ai/api/tournaments/5ea420b7-17c1-4a9d-9501-0fcaa60387f9/leaderboard
 ```
 
-Параметры:
-- `page` - номер страницы (1-431)
-- `limit` - количество записей на странице (20)
+Parameters:
+- `page` - page number (1-431)
+- `limit` - number of records per page (20)
 
 ## Error Handling
 
